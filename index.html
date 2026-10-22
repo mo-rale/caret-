@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Caret — Ahron Badili</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script>try{var t=localStorage.getItem("neutral-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+
+<header class="mast">
+  <div class="wrap">
+    <div class="mast-row">
+      <a class="mark" href="#" aria-label="Caret">
+        <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><path d="M3 17L10 4l7 13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/></svg>
+        <span>Caret</span>
+      </a>
+      <span class="tag">A proof desk for inclusive language &middot; by Ahron Badili</span>
+      <nav class="mast-nav">
+        <button id="openTop" class="lnk">Open file <kbd>Ctrl O</kbd></button>
+        <button id="themeBtn" class="lnk" aria-label="Toggle theme"><span id="themeLbl">Night</span></button>
+      </nav>
+    </div>
+  </div>
+  <div class="rule-2" aria-hidden="true"></div>
+</header>
+
+<main class="wrap">
+  <section class="lede">
+    <p class="lede-main">Paste a page. Every gendered word is <s>struck out</s><span class="lede-fix">and a neutral word written above it,</span> the way an editor would mark a proof.</p>
+    <p class="lede-side">A finite state automaton reads your text in a single pass. Nothing is uploaded; the desk is entirely in this browser tab.</p>
+  </section>
+
+  <div class="layout">
+    <!-- MANUSCRIPT -->
+    <section class="ms" id="docCard" aria-label="Manuscript">
+      <div class="ms-bar">
+        <h2 class="lab">Manuscript <span id="fileChip" class="fname" hidden></span></h2>
+        <div class="acts">
+          <label class="lnk" for="file" tabindex="0" id="uploadLbl">Open</label>
+          <input id="file" type="file" accept=".txt,.docx,.pdf" hidden>
+          <span class="menu">
+            <button id="sampleBtn" class="lnk">Samples ▾</button>
+            <span id="sampleMenu" class="menu-pop" hidden>
+              <button data-s="biased">Biased example</button>
+              <button data-s="neutral">Neutral example</button>
+              <button data-s="speech">Speech opener</button>
+            </span>
+          </span>
+          <button id="undoBtn" class="lnk" disabled title="Ctrl+Z">Undo</button>
+          <button id="clearBtn" class="lnk">Clear</button>
+        </div>
+      </div>
+
+      <div class="sheet-row">
+        <div class="editor-wrap" id="editorWrap">
+          <div class="backdrop" id="backdrop" aria-hidden="true"><div id="backdropIn"></div></div>
+          <textarea id="editor" spellcheck="false" aria-label="Document text" placeholder="Begin typing, or drop a .txt, .docx or .pdf on this page.
+
+For instance: The chairman told the stewardess that he would call his wife."></textarea>
+          <div class="drop-veil"><div><b>Drop to set on the desk</b><span>.txt · .docx · .pdf</span></div></div>
+        </div>
+        <div class="spine" id="spine" role="group" aria-label="Where the marks fall in the document"></div>
+      </div>
+
+      <div class="ms-foot">
+        <span id="wc">0 words</span><span class="sep">/</span><span id="cc">0 chars</span><span class="sep hide-sm">/</span><span class="hide-sm" id="rt">0 min</span>
+        <span class="grow"></span>
+        <button id="fixAllBtn" class="btn" hidden>Accept every mark</button>
+      </div>
+      <div id="banner" class="status info" role="status" aria-live="polite"></div>
+    </section>
+
+    <!-- MARGIN -->
+    <aside class="margin" aria-label="Marginalia">
+      <section class="verdict">
+        <h2 class="lab">Verdict</h2>
+        <div class="verdict-row">
+          <div class="stamp" id="stamp"><span id="stampT">NO COPY</span><small id="scoreN">–</small></div>
+          <p id="scoreSub" class="v-sub">Add some text to see how it reads.</p>
+        </div>
+        <dl class="ledger">
+          <div><dt>Marks</dt><dd id="statTotal">0</dd></div>
+          <div><dt>Distinct terms</dt><dd id="statDistinct">0</dd></div>
+          <div><dt>Automaton states</dt><dd id="statStates">0</dd></div>
+        </dl>
+        <span id="scoreTitle" hidden></span>
+      </section>
+
+      <section class="notes">
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-pane="paneFind">Marks</button>
+          <button class="tab" data-pane="paneReport">Report</button>
+          <button class="tab" data-pane="paneFsa">Machine</button>
+        </div>
+
+        <div id="paneFind" class="pane">
+          <ol id="summary" class="summary"></ol>
+          <div id="summaryEmpty" class="empty"></div>
+        </div>
+
+        <div id="paneReport" class="pane" hidden>
+          <pre id="report" class="report"></pre>
+          <div class="row">
+            <button id="dlBtn" class="btn small">Download</button>
+            <button id="copyBtn" class="lnk">Copy</button>
+          </div>
+        </div>
+
+        <div id="paneFsa" class="pane" hidden>
+          <p class="muted-p">Type a word. The tape feeds one character at a time; the number beneath each cell is the machine's state. A boxed state accepts the word.</p>
+          <div class="fsa-in">
+            <input id="fsaInput" class="field" value="chairman" spellcheck="false" aria-label="Word to trace">
+            <button id="playBtn" class="btn small">Run</button>
+          </div>
+          <div id="fsaTrace" class="tape"></div>
+          <p id="fsaVerdict" class="fverdict"></p>
+        </div>
+      </section>
+    </aside>
+  </div>
+</main>
+
+<div id="pop" class="pop" hidden></div>
+<div id="toast" class="toast" hidden></div>
+<footer class="wrap foot"><span>Caret &middot; &copy; Ahron Badili</span><span>Private by construction — no document leaves this tab.</span></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="lexicon.js"></script>
+<script src="fsa.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

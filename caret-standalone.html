@@ -1,0 +1,997 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Caret — Ahron Badili</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* CARET — the proof desk.
+   Paper, ink, and a single proofreader's red. Hard edges, hairline rules, no cards. */
+:root {
+  --paper: #e8ecf1; --sheet: #f8fafc; --ink: #14182a; --mute: #46506a; --rule: #c2cbd8;
+  --pencil: #1d4ed8; --clean: #1a7a5a; --ochre: #9a6a08; --alert: #c62828;
+  --serif: "Libre Caslon Text", Georgia, "Times New Roman", serif;
+  --mono: "Courier Prime", "Courier New", ui-monospace, monospace;
+  --lh: 36px;
+  --t-label: 12px; --t-data: 14px; --t-small: 15px; --t-body: 17px;
+}
+:root[data-theme="dark"] {
+  --paper: #0e1117; --sheet: #151a23; --ink: #e6eaf2; --mute: #8b95a9; --rule: #2b3341;
+  --pencil: #7ea6ff; --clean: #5fd0a5; --ochre: #e0a63a; --alert: #ff7b72;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0e1117; --sheet: #151a23; --ink: #e6eaf2; --mute: #8b95a9; --rule: #2b3341;
+    --pencil: #7ea6ff; --clean: #5fd0a5; --ochre: #e0a63a; --alert: #ff7b72;
+  }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.6 var(--serif); -webkit-font-smoothing: antialiased; }
+.wrap { width: min(1240px, 100% - 40px); margin-inline: auto; }
+.grow { flex: 1; }
+::selection { background: var(--pencil); color: var(--sheet); }
+:focus-visible { outline: 2px solid var(--pencil); outline-offset: 3px; }
+button { font: inherit; color: inherit; }
+
+/* labels: typewriter small caps, the system's "voice" for machine things */
+.lab, .lnk, .btn, .tab, dt, kbd, .tag, .foot, .ms-foot, .alts-l, .pop-title, .count, .find::before, .stamp small, .cell i, .drop-veil span { font-family: var(--mono); font-size: var(--t-label); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.lab { margin: 0; font-weight: 500; color: var(--mute); }
+
+/* masthead */
+.mast-row { display: flex; align-items: baseline; gap: 22px; padding: 18px 0 12px; }
+.mark { display: inline-flex; align-items: baseline; gap: 8px; color: var(--ink); text-decoration: none; font: italic 400 28px/1 var(--serif); letter-spacing: -.01em; }
+.mark svg { color: var(--pencil); align-self: center; transform: translateY(-1px); }
+.tag { color: var(--mute); }
+.mast-nav { margin-left: auto; display: flex; gap: 20px; }
+.rule-2 { height: 6px; border-top: 3px solid var(--ink); border-bottom: 1px solid var(--ink); }
+kbd { font-weight: 400; border: 1px solid var(--rule); padding: 1px 5px; margin-left: 4px; color: var(--mute); }
+
+/* links that behave like buttons */
+.lnk { background: none; border: 0; padding: 4px 0; cursor: pointer; color: var(--ink); border-bottom: 1px solid transparent; transition: border-color .15s, color .15s; }
+.lnk:hover:not(:disabled) { color: var(--pencil); border-bottom-color: var(--pencil); }
+.lnk:disabled { color: var(--mute); opacity: .5; cursor: default; }
+label.lnk { display: inline-block; }
+
+/* the one solid control: square, inked, pressed offset */
+.btn { background: var(--pencil); color: var(--sheet); border: 1px solid var(--ink); padding: 8px 14px; cursor: pointer; box-shadow: 3px 3px 0 var(--ink); transition: transform .12s, box-shadow .12s; }
+.btn:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 var(--ink); }
+.btn:active { transform: translate(3px,3px); box-shadow: 0 0 0 var(--ink); }
+.btn.small { padding: 6px 11px; }
+
+/* lede: asymmetric, set like a standfirst */
+.lede { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 3fr); gap: 56px; padding: 44px 0 36px; align-items: end; }
+.lede-main { margin: 0; font-size: clamp(21px, 2.2vw, 28px); line-height: 1.3; max-width: 24em; letter-spacing: -.005em; }
+.lede-main s { text-decoration-color: var(--pencil); text-decoration-thickness: 2px; color: var(--mute); }
+.lede-fix { color: var(--pencil); font-style: italic; margin-left: .35em; }
+.lede-side { margin: 0; font-size: var(--t-small); color: var(--mute); border-left: 1px solid var(--rule); padding-left: 18px; }
+
+/* layout: wide manuscript, narrow margin, divided by a single rule */
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; border-top: 1px solid var(--ink); }
+.ms { padding: 18px 32px 28px 0; border-right: 1px solid var(--rule); min-width: 0; }
+.margin { padding: 18px 0 28px 28px; min-width: 0; }
+@media (max-width: 940px) {
+  .lede { grid-template-columns: 1fr; gap: 18px; padding: 30px 0 24px; }
+  .lede-side { border-left: 0; padding-left: 0; }
+  .layout { grid-template-columns: 1fr; }
+  .ms { padding-right: 0; border-right: 0; }
+  .margin { padding-left: 0; border-top: 1px solid var(--ink); margin-top: 10px; }
+  .hide-sm, .tag { display: none; }
+}
+
+.ms-bar { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.fname { color: var(--pencil); text-transform: none; letter-spacing: 0; margin-left: 10px; }
+.fname::before { content: "— "; }
+.acts { display: flex; gap: 18px; align-items: baseline; }
+.menu { position: relative; display: inline-block; }
+.menu-pop { position: absolute; z-index: 20; top: 100%; left: 0; min-width: 190px; background: var(--sheet); border: 1px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); padding: 4px; }
+.menu-pop button { display: block; width: 100%; text-align: left; background: none; border: 0; padding: 8px 10px; cursor: pointer; font: var(--t-body) var(--serif); }
+.menu-pop button:hover { background: var(--ink); color: var(--sheet); }
+
+/* sheet: ruled paper, text and mark-up aligned to the same baseline grid */
+.sheet-row { display: flex; gap: 0; }
+.editor-wrap { position: relative; flex: 1; height: 500px; min-width: 0; background-color: var(--sheet); border: 1px solid var(--ink);
+  background-image: linear-gradient(to bottom, transparent calc(var(--lh) - 3px), color-mix(in srgb, var(--rule) 60%, transparent) calc(var(--lh) - 3px), color-mix(in srgb, var(--rule) 60%, transparent) calc(var(--lh) - 2px), transparent calc(var(--lh) - 2px));
+  background-size: 100% var(--lh); background-position: 0 calc(22px - var(--sy, 0px)); }
+.editor-wrap::before { content: ""; position: absolute; top: 0; bottom: 0; left: 44px; border-left: 1px solid color-mix(in srgb, var(--pencil) 45%, transparent); pointer-events: none; }
+.backdrop, #editor { position: absolute; inset: 0; margin: 0; padding: 22px 22px 22px 62px; font: 17px/var(--lh) var(--serif); white-space: pre-wrap; overflow-wrap: break-word; border: 0; }
+.backdrop { overflow: hidden; color: transparent; pointer-events: none; }
+#editor { width: 100%; height: 100%; resize: none; background: transparent; color: var(--ink); outline: none; caret-color: var(--pencil); }
+#editor:focus-visible { outline: none; }
+.editor-wrap:focus-within { box-shadow: 4px 4px 0 var(--ink); }
+#editor::placeholder { color: var(--mute); font-style: italic; opacity: .8; }
+/* the proof mark: struck out in red, correction written above the line */
+.backdrop mark { position: relative; background: color-mix(in srgb, var(--pencil) 8%, transparent); color: transparent; text-decoration: line-through; text-decoration-color: var(--pencil); text-decoration-thickness: 2px; }
+.backdrop mark::after { content: attr(data-fix); position: absolute; left: 0; top: -1.02em; white-space: nowrap; font: italic 400 13px/1 var(--serif); color: var(--pencil); text-decoration: none; }
+.backdrop mark.sel { background: color-mix(in srgb, var(--pencil) 28%, transparent); }
+.drop-veil { position: absolute; inset: 0; display: none; place-items: center; background: color-mix(in srgb, var(--sheet) 92%, transparent); z-index: 3; text-align: center; outline: 2px dashed var(--pencil); outline-offset: -10px; }
+.drop-veil b { display: block; font: italic 500 26px var(--serif); }
+.drop-veil span { font: 12px var(--mono); color: var(--mute); text-transform: uppercase; letter-spacing: .08em; }
+.editor-wrap.over .drop-veil { display: grid; }
+
+/* spine: a thin map of the document; each red tick is a mark, click to go there */
+.spine { position: relative; width: 14px; margin-left: 8px; border-left: 1px solid var(--rule); border-right: 1px solid var(--rule); background: repeating-linear-gradient(to bottom, transparent 0 9px, var(--rule) 9px 10px); }
+.spine i { position: absolute; left: -1px; right: -1px; height: 3px; background: var(--pencil); cursor: pointer; transition: transform .15s; }
+.spine i:hover { transform: scaleX(1.6); transform-origin: left; }
+
+.ms-foot { display: flex; align-items: center; gap: 8px; margin-top: 14px; color: var(--mute); min-height: 40px; }
+.sep { opacity: .5; }
+
+/* status line */
+.status { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--rule); display: flex; gap: 10px; align-items: baseline; font: italic 400 var(--t-small)/1.4 var(--serif); color: var(--mute); }
+.status::before { content: "●"; font-size: 9px; transform: translateY(-1px); }
+.status.warn { color: var(--pencil); }
+.status.ok { color: var(--clean); }
+.status.err { color: var(--alert); }
+
+/* verdict: rubber stamp, not a gauge */
+.verdict { padding-bottom: 20px; border-bottom: 1px solid var(--rule); }
+.verdict-row { display: flex; gap: 18px; align-items: center; margin: 16px 0 14px; }
+.stamp { --c: var(--mute); flex: none; transform: rotate(-5deg); border: 2px solid var(--c); outline: 1px solid var(--c); outline-offset: 2px; color: var(--c); padding: 8px 14px 6px; text-align: center; font: 700 17px/1.1 var(--mono); letter-spacing: .12em; opacity: .92; transition: color .3s, border-color .3s; }
+.stamp small { display: block; letter-spacing: .08em; margin-top: 3px; padding-top: 3px; border-top: 1px solid var(--c); }
+.stamp.s-clean { --c: var(--clean); } .stamp.s-minor { --c: var(--ochre); } .stamp.s-revise { --c: var(--alert); }
+.stamp.hit { animation: thunk .35s cubic-bezier(.3,1.6,.5,1); }
+@keyframes thunk { from { transform: rotate(-9deg) scale(1.25); opacity: 0; } }
+.v-sub { margin: 0; font-size: var(--t-small); font-style: italic; color: var(--mute); }
+.ledger { margin: 0; }
+.ledger div { display: flex; align-items: baseline; gap: 6px; padding: 3px 0; }
+.ledger div::after { content: ""; order: 1; flex: 1; border-bottom: 1px dotted var(--mute); transform: translateY(-3px); }
+.ledger dt { color: var(--mute); order: 0; } .ledger dd { order: 2; margin: 0; font: 700 var(--t-data) var(--mono); }
+
+/* tabs: just underlined words */
+.tabs { display: flex; gap: 22px; margin: 18px 0 6px; border-bottom: 1px solid var(--ink); }
+.tab { background: none; border: 0; padding: 4px 0 9px; cursor: pointer; color: var(--mute); border-bottom: 3px solid transparent; margin-bottom: -1px; }
+.tab:hover { color: var(--ink); }
+.tab.active { color: var(--ink); border-bottom-color: var(--pencil); }
+.pane { animation: in .25s ease; }
+@keyframes in { from { opacity: 0; transform: translateY(3px); } }
+
+/* marks: footnote-style entries */
+.summary { list-style: none; margin: 0; padding: 0; counter-reset: n; max-height: 400px; overflow: auto; }
+.find { counter-increment: n; display: grid; grid-template-columns: 26px 1fr; padding: 12px 0; border-bottom: 1px solid var(--rule); animation: in .3s ease both; }
+.find::before { content: counter(n); font: 12px/2 var(--mono); color: var(--mute); }
+.find-top { display: flex; align-items: baseline; gap: 10px; }
+.term { background: none; border: 0; padding: 0; cursor: pointer; font: 700 var(--t-body) var(--serif); color: var(--mute); text-decoration: line-through; text-decoration-color: var(--pencil); text-decoration-thickness: 2px; }
+.term:hover { color: var(--ink); }
+.count { font: 12px var(--mono); color: var(--mute); }
+.alts { grid-column: 2; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-top: 4px; }
+.alts-l { font: 11px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--mute); }
+.chip { background: none; border: 0; border-bottom: 1px solid var(--pencil); padding: 0; cursor: pointer; font: italic 400 var(--t-body) var(--serif); color: var(--pencil); }
+.chip:hover { background: var(--pencil); color: var(--sheet); }
+.empty { padding: 30px 0 10px; font: italic 22px/1.35 var(--serif); color: var(--mute); }
+.empty small { display: block; margin-top: 8px; font-style: normal; }
+.summary:not(:empty) + .empty { display: none; }
+
+/* report */
+.report { font: 400 13px/1.65 var(--mono); border: 1px solid var(--rule); background: var(--sheet); padding: 14px; max-height: 360px; overflow: auto; white-space: pre-wrap; margin: 12px 0; }
+.row { display: flex; gap: 20px; align-items: baseline; }
+
+/* machine: the tape */
+.muted-p { font-size: var(--t-small); color: var(--mute); margin: 14px 0; }
+.fsa-in { display: flex; gap: 12px; margin-bottom: 16px; }
+.field { flex: 1; min-width: 0; font: 700 var(--t-data) var(--mono); padding: 8px 2px; border: 0; border-bottom: 2px solid var(--ink); background: transparent; color: var(--ink); border-radius: 0; }
+.field:focus { outline: none; border-bottom-color: var(--pencil); }
+.tape { display: flex; flex-wrap: wrap; gap: 14px 0; padding: 14px 0; min-height: 86px; }
+.cell { width: 40px; text-align: center; animation: feed .25s ease both; }
+.cell b { display: block; height: 38px; line-height: 36px; border: 1px solid var(--ink); border-right-width: 0; font: 700 16px var(--mono); background: var(--sheet); }
+.cell:last-child b { border-right-width: 1px; }
+.cell i { display: block; font: normal 11px/22px var(--mono); color: var(--mute); }
+.cell.acc b { background: var(--pencil); color: var(--sheet); border-color: var(--pencil); }
+.cell.acc i { color: var(--pencil); font-weight: 500; }
+.cell.start b { border-style: dashed; color: var(--mute); }
+@keyframes feed { from { opacity: 0; transform: translateY(-8px); } }
+.fverdict { margin: 4px 0 0; font: italic 400 var(--t-body) var(--serif); min-height: 1.5em; }
+
+/* popover = a paper slip with a hard shadow */
+.pop { position: absolute; z-index: 50; min-width: 200px; background: var(--sheet); border: 1px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); padding: 6px; animation: in .15s ease; }
+.pop-title { font: 11px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--mute); padding: 4px 8px 6px; }
+.pop button { display: block; width: 100%; text-align: left; background: none; border: 0; padding: 7px 8px; cursor: pointer; font: italic 400 var(--t-body) var(--serif); color: var(--pencil); }
+.pop button:hover { background: var(--pencil); color: var(--sheet); }
+
+/* toast: a printed tape label */
+.toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%); z-index: 60; background: var(--ink); color: var(--sheet); font: 700 var(--t-label) var(--mono); text-transform: uppercase; letter-spacing: .08em; padding: 10px 16px; box-shadow: 4px 4px 0 var(--ink); animation: up .25s ease; }
+@keyframes up { from { opacity: 0; transform: translate(-50%, 8px); } }
+
+.foot { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-top: 10px; padding: 18px 0 34px; border-top: 3px double var(--ink); color: var(--mute); }
+@media (max-width: 520px) {
+  .backdrop, #editor { padding-left: 34px; padding-right: 14px; font-size: 16px; }
+  .editor-wrap::before { left: 22px; }
+  .editor-wrap { height: 420px; }
+  .acts { gap: 14px; }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+</style>
+<script>try{var t=localStorage.getItem("neutral-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+</head>
+<body>
+
+<header class="mast">
+  <div class="wrap">
+    <div class="mast-row">
+      <a class="mark" href="#" aria-label="Caret">
+        <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><path d="M3 17L10 4l7 13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/></svg>
+        <span>Caret</span>
+      </a>
+      <span class="tag">A proof desk for inclusive language &middot; by Ahron Badili</span>
+      <nav class="mast-nav">
+        <button id="openTop" class="lnk">Open file <kbd>Ctrl O</kbd></button>
+        <button id="themeBtn" class="lnk" aria-label="Toggle theme"><span id="themeLbl">Night</span></button>
+      </nav>
+    </div>
+  </div>
+  <div class="rule-2" aria-hidden="true"></div>
+</header>
+
+<main class="wrap">
+  <section class="lede">
+    <p class="lede-main">Paste a page. Every gendered word is <s>struck out</s><span class="lede-fix">and a neutral word written above it,</span> the way an editor would mark a proof.</p>
+    <p class="lede-side">A finite state automaton reads your text in a single pass. Nothing is uploaded; the desk is entirely in this browser tab.</p>
+  </section>
+
+  <div class="layout">
+    <!-- MANUSCRIPT -->
+    <section class="ms" id="docCard" aria-label="Manuscript">
+      <div class="ms-bar">
+        <h2 class="lab">Manuscript <span id="fileChip" class="fname" hidden></span></h2>
+        <div class="acts">
+          <label class="lnk" for="file" tabindex="0" id="uploadLbl">Open</label>
+          <input id="file" type="file" accept=".txt,.docx,.pdf" hidden>
+          <span class="menu">
+            <button id="sampleBtn" class="lnk">Samples ▾</button>
+            <span id="sampleMenu" class="menu-pop" hidden>
+              <button data-s="biased">Biased example</button>
+              <button data-s="neutral">Neutral example</button>
+              <button data-s="speech">Speech opener</button>
+            </span>
+          </span>
+          <button id="undoBtn" class="lnk" disabled title="Ctrl+Z">Undo</button>
+          <button id="clearBtn" class="lnk">Clear</button>
+        </div>
+      </div>
+
+      <div class="sheet-row">
+        <div class="editor-wrap" id="editorWrap">
+          <div class="backdrop" id="backdrop" aria-hidden="true"><div id="backdropIn"></div></div>
+          <textarea id="editor" spellcheck="false" aria-label="Document text" placeholder="Begin typing, or drop a .txt, .docx or .pdf on this page.
+
+For instance: The chairman told the stewardess that he would call his wife."></textarea>
+          <div class="drop-veil"><div><b>Drop to set on the desk</b><span>.txt · .docx · .pdf</span></div></div>
+        </div>
+        <div class="spine" id="spine" role="group" aria-label="Where the marks fall in the document"></div>
+      </div>
+
+      <div class="ms-foot">
+        <span id="wc">0 words</span><span class="sep">/</span><span id="cc">0 chars</span><span class="sep hide-sm">/</span><span class="hide-sm" id="rt">0 min</span>
+        <span class="grow"></span>
+        <button id="fixAllBtn" class="btn" hidden>Accept every mark</button>
+      </div>
+      <div id="banner" class="status info" role="status" aria-live="polite"></div>
+    </section>
+
+    <!-- MARGIN -->
+    <aside class="margin" aria-label="Marginalia">
+      <section class="verdict">
+        <h2 class="lab">Verdict</h2>
+        <div class="verdict-row">
+          <div class="stamp" id="stamp"><span id="stampT">NO COPY</span><small id="scoreN">–</small></div>
+          <p id="scoreSub" class="v-sub">Add some text to see how it reads.</p>
+        </div>
+        <dl class="ledger">
+          <div><dt>Marks</dt><dd id="statTotal">0</dd></div>
+          <div><dt>Distinct terms</dt><dd id="statDistinct">0</dd></div>
+          <div><dt>Automaton states</dt><dd id="statStates">0</dd></div>
+        </dl>
+        <span id="scoreTitle" hidden></span>
+      </section>
+
+      <section class="notes">
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-pane="paneFind">Marks</button>
+          <button class="tab" data-pane="paneReport">Report</button>
+          <button class="tab" data-pane="paneFsa">Machine</button>
+        </div>
+
+        <div id="paneFind" class="pane">
+          <ol id="summary" class="summary"></ol>
+          <div id="summaryEmpty" class="empty"></div>
+        </div>
+
+        <div id="paneReport" class="pane" hidden>
+          <pre id="report" class="report"></pre>
+          <div class="row">
+            <button id="dlBtn" class="btn small">Download</button>
+            <button id="copyBtn" class="lnk">Copy</button>
+          </div>
+        </div>
+
+        <div id="paneFsa" class="pane" hidden>
+          <p class="muted-p">Type a word. The tape feeds one character at a time; the number beneath each cell is the machine's state. A boxed state accepts the word.</p>
+          <div class="fsa-in">
+            <input id="fsaInput" class="field" value="chairman" spellcheck="false" aria-label="Word to trace">
+            <button id="playBtn" class="btn small">Run</button>
+          </div>
+          <div id="fsaTrace" class="tape"></div>
+          <p id="fsaVerdict" class="fverdict"></p>
+        </div>
+      </section>
+    </aside>
+  </div>
+</main>
+
+<div id="pop" class="pop" hidden></div>
+<div id="toast" class="toast" hidden></div>
+<footer class="wrap foot"><span>Caret &middot; &copy; Ahron Badili</span><span>Private by construction — no document leaves this tab.</span></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+// Gender-specific term -> gender-neutral alternatives
+window.LEXICON = {
+  "he": [
+    "they"
+  ],
+  "she": [
+    "they"
+  ],
+  "he or she": [
+    "they"
+  ],
+  "she or he": [
+    "they"
+  ],
+  "him": [
+    "them"
+  ],
+  "her": [
+    "them",
+    "their"
+  ],
+  "his": [
+    "their"
+  ],
+  "hers": [
+    "theirs"
+  ],
+  "himself": [
+    "themselves",
+    "themself"
+  ],
+  "herself": [
+    "themselves",
+    "themself"
+  ],
+  "his or her": [
+    "their"
+  ],
+  "her or his": [
+    "their"
+  ],
+  "him or her": [
+    "them"
+  ],
+  "ladies and gentlemen": [
+    "everyone",
+    "honored guests"
+  ],
+  "boys and girls": [
+    "children",
+    "kids"
+  ],
+  "chairman": [
+    "chairperson",
+    "chair"
+  ],
+  "chairwoman": [
+    "chairperson",
+    "chair"
+  ],
+  "stewardess": [
+    "flight attendant"
+  ],
+  "steward": [
+    "flight attendant"
+  ],
+  "businessman": [
+    "businessperson"
+  ],
+  "businesswoman": [
+    "businessperson"
+  ],
+  "policeman": [
+    "police officer"
+  ],
+  "policewoman": [
+    "police officer"
+  ],
+  "fireman": [
+    "firefighter"
+  ],
+  "mailman": [
+    "mail carrier"
+  ],
+  "postman": [
+    "mail carrier"
+  ],
+  "salesman": [
+    "salesperson"
+  ],
+  "saleswoman": [
+    "salesperson"
+  ],
+  "spokesman": [
+    "spokesperson"
+  ],
+  "spokeswoman": [
+    "spokesperson"
+  ],
+  "congressman": [
+    "member of Congress",
+    "legislator"
+  ],
+  "congresswoman": [
+    "member of Congress",
+    "legislator"
+  ],
+  "cameraman": [
+    "camera operator"
+  ],
+  "waiter": [
+    "server"
+  ],
+  "waitress": [
+    "server"
+  ],
+  "actress": [
+    "actor"
+  ],
+  "headmaster": [
+    "head teacher",
+    "principal"
+  ],
+  "headmistress": [
+    "head teacher",
+    "principal"
+  ],
+  "foreman": [
+    "supervisor"
+  ],
+  "craftsman": [
+    "artisan"
+  ],
+  "repairman": [
+    "repair technician"
+  ],
+  "deliveryman": [
+    "delivery person"
+  ],
+  "cleaning lady": [
+    "cleaner"
+  ],
+  "housewife": [
+    "homemaker"
+  ],
+  "landlady": [
+    "landlord"
+  ],
+  "mankind": [
+    "humankind",
+    "humanity"
+  ],
+  "manpower": [
+    "workforce",
+    "staffing"
+  ],
+  "man-made": [
+    "synthetic",
+    "artificial"
+  ],
+  "man hours": [
+    "person hours",
+    "work hours"
+  ],
+  "man-hours": [
+    "person-hours",
+    "work-hours"
+  ],
+  "freshman": [
+    "first-year student"
+  ],
+  "layman": [
+    "layperson"
+  ],
+  "forefathers": [
+    "ancestors"
+  ],
+  "brotherhood": [
+    "community",
+    "fellowship"
+  ],
+  "sisterhood": [
+    "community",
+    "fellowship"
+  ],
+  "gentleman": [
+    "person"
+  ],
+  "gentlemen": [
+    "people"
+  ],
+  "guys": [
+    "folks",
+    "everyone"
+  ]
+};
+
+</script>
+<script>
+// Finite state automaton (DFA) for multi-term recognition.
+//
+// The lexicon is compiled into a trie (the states), completed with failure
+// links (Aho-Corasick) so that delta(state, char) is defined for every
+// state. Scanning is one left-to-right pass: one transition per character.
+// A state is accepting when it (or a suffix state) ends a lexicon term.
+// Word boundaries are checked on acceptance, so "he" is not reported
+// inside "the" / "she" and "chairman" not inside "chairmanship".
+(function () {
+  const isWordChar = (c) => /[\p{L}\p{N}']/u.test(c);
+
+  // Lowercase; collapse whitespace runs to one space; unify dashes/quotes.
+  // Returns [normalized, idx] where idx[i] = original index of norm[i].
+  function normalize(text) {
+    const out = [], idx = [];
+    let i = 0;
+    while (i < text.length) {
+      const c = text[i];
+      if (/\s/.test(c)) {
+        let j = i;
+        while (j < text.length && /\s/.test(text[j])) j++;
+        out.push(" "); idx.push(i); i = j; continue;
+      }
+      if ("‐‑‒–—−".includes(c)) out.push("-");
+      else if (c === "’" || c === "‘") out.push("'");
+      else out.push(c.toLowerCase().length === 1 ? c.toLowerCase() : c);
+      idx.push(i); i++;
+    }
+    idx.push(text.length);
+    return [out.join(""), idx];
+  }
+
+  class TermAutomaton {
+    constructor(terms) {
+      this.goto = [new Map()];   // transition edges of the trie
+      this.out = [null];         // term accepted exactly at this state
+      for (const t of terms) this._insert(t.toLowerCase());
+      this._build();
+    }
+    _insert(term) {
+      let s = 0;
+      for (const ch of term) {
+        let n = this.goto[s].get(ch);
+        if (n === undefined) {
+          this.goto.push(new Map()); this.out.push(null);
+          n = this.goto.length - 1; this.goto[s].set(ch, n);
+        }
+        s = n;
+      }
+      this.out[s] = term;
+    }
+    _build() {
+      const n = this.goto.length;
+      this.fail = new Array(n).fill(0);
+      this.dict = new Array(n).fill(null); // nearest accepting suffix state
+      const q = [...this.goto[0].values()];
+      while (q.length) {
+        const s = q.shift();
+        for (const [ch, t] of this.goto[s]) {
+          let f = this.fail[s];
+          while (f && !this.goto[f].has(ch)) f = this.fail[f];
+          this.fail[t] = this.goto[f].get(ch) ?? 0;
+          q.push(t);
+        }
+        const f = this.fail[s];
+        this.dict[s] = this.out[f] ? f : this.dict[f];
+      }
+    }
+    get numStates() { return this.goto.length; }
+
+    // delta(state, ch)
+    step(state, ch) {
+      while (state && !this.goto[state].has(ch)) state = this.fail[state];
+      return this.goto[state].get(ch) ?? 0;
+    }
+    *_accepting(state) {
+      let s = this.out[state] ? state : this.dict[state];
+      while (s) { yield this.out[s]; s = this.dict[s]; }
+    }
+
+    // Run the machine over a word, recording each state (for the inspector).
+    trace(word) {
+      const [norm] = normalize(word);
+      let state = 0;
+      const steps = [{ ch: null, state: 0, accept: this.out[0] }];
+      for (const ch of norm) {
+        state = this.step(state, ch);
+        steps.push({ ch, state, accept: [...this._accepting(state)] });
+      }
+      return steps;
+    }
+
+    // Non-overlapping matches: leftmost, then longest.
+    findAll(text) {
+      const [norm, idx] = normalize(text);
+      const raw = [];
+      let state = 0;
+      for (let i = 0; i < norm.length; i++) {
+        state = this.step(state, norm[i]);
+        for (const term of this._accepting(state)) {
+          const a = i - term.length + 1, b = i + 1;
+          if (a > 0 && isWordChar(norm[a - 1])) continue;
+          if (b < norm.length && isWordChar(norm[b])) continue;
+          raw.push([a, b, term]);
+        }
+      }
+      raw.sort((x, y) => x[0] - y[0] || (y[1] - y[0]) - (x[1] - x[0]));
+      const matches = [];
+      let lastEnd = -1;
+      for (const [a, b, term] of raw) {
+        if (a < lastEnd) continue;
+        const s = idx[a], e = idx[b];
+        matches.push({ start: s, end: e, term, text: text.slice(s, e) });
+        lastEnd = b;
+      }
+      return matches;
+    }
+  }
+  window.TermAutomaton = TermAutomaton;
+})();
+
+</script>
+<script>
+(function () {
+  const NEUTRAL = "The text has gender-neutral language.";
+  const $ = (id) => document.getElementById(id);
+  const fsa = new TermAutomaton(Object.keys(LEXICON));
+
+  const editor = $("editor"), backdropIn = $("backdropIn"), banner = $("banner"), pop = $("pop");
+  let matches = [], source = "(pasted text)", timer = null, history = [], playTimer = null;
+
+  const SAMPLES = {
+    biased: "The chairman told the stewardess that he would call his wife about the businessman's request.\n\nEvery policeman and fireman must report his hours. The manpower shortage affects mankind, and the salesman said the guys on the team are doing a great job.\n\nLadies and gentlemen, welcome.",
+    neutral: "The chairperson told the flight attendant that they would call their partner about the businessperson's request.\n\nEvery police officer and firefighter must report their hours. The workforce shortage affects humankind, and the salesperson said everyone on the team is doing a great job.",
+    speech: "Ladies and gentlemen, boys and girls, thank you for joining us. Our spokesman and the headmistress will explain how each freshman can contact his or her advisor.",
+  };
+
+  $("statStates").textContent = fsa.numStates;
+
+  const setBanner = (kind, msg) => { banner.className = "banner " + kind; banner.textContent = msg; };
+  function toast(msg) {
+    const t = $("toast"); t.textContent = msg; t.hidden = false;
+    clearTimeout(toast.t); toast.t = setTimeout(() => (t.hidden = true), 2200);
+  }
+
+  // ---------- helpers ----------
+  function matchCase(orig, repl) {
+    if (orig.length > 1 && orig === orig.toUpperCase() && /[A-Z]/.test(orig)) return repl.toUpperCase();
+    if (/^[A-Z]/.test(orig)) return repl[0].toUpperCase() + repl.slice(1);
+    return repl;
+  }
+  function pushHistory() {
+    if (history[history.length - 1] !== editor.value) history.push(editor.value);
+    if (history.length > 100) history.shift();
+    $("undoBtn").disabled = history.length < 2;
+  }
+  // apply replacements (array of {m, alt}); work from the end so offsets stay valid
+  function applyReplacements(list) {
+    let v = editor.value;
+    [...list].sort((a, b) => b.m.start - a.m.start).forEach(({ m, alt }) => {
+      v = v.slice(0, m.start) + matchCase(m.text, alt) + v.slice(m.end);
+    });
+    editor.value = v; pushHistory(); analyze(); return list.length;
+  }
+
+  // ---------- analysis ----------
+  function analyze() {
+    const text = editor.value;
+    matches = fsa.findAll(text);
+    const summary = new Map();
+    for (const m of matches) summary.set(m.term, (summary.get(m.term) || 0) + 1);
+
+    const words = (text.match(/[\p{L}\p{N}'’-]+/gu) || []).length;
+    $("wc").textContent = words + (words === 1 ? " word" : " words");
+    $("cc").textContent = text.length + " characters";
+    $("rt").textContent = Math.max(words ? 1 : 0, Math.round(words / 220)) + " min read";
+    $("statTotal").textContent = matches.length;
+    $("statDistinct").textContent = summary.size;
+    $("fixAllBtn").hidden = !matches.length;
+
+    if (!text.trim()) setBanner("info", "Upload a document or paste text to begin.");
+    else if (!matches.length) setBanner("ok", NEUTRAL);
+    else setBanner("warn", `Found ${matches.length} gender-specific term${matches.length > 1 ? "s" : ""}. Click a highlight or use a suggestion.`);
+
+    renderScore(text, words);
+    renderSummary(summary);
+    renderBackdrop(text);
+    renderSpine(text);
+    $("report").textContent = buildReport(text, summary);
+  }
+
+  function renderScore(text, words) {
+    let flaggedWords = 0;
+    for (const m of matches) flaggedWords += (m.text.match(/\S+/g) || []).length;
+    let score = null;
+    if (text.trim() && words) score = Math.max(0, Math.round(100 - (flaggedWords / words) * 100 * 2));
+    if (score != null && matches.length) score = Math.min(score, 99);
+    if (!matches.length && words) score = 100;
+    const [cls, label, s] = score == null ? ["", "NO COPY", "Add some text to see how it reads."]
+      : score === 100 ? ["s-clean", "CLEAN", NEUTRAL]
+      : score >= 90 ? ["s-minor", "MINOR", "A few small corrections and it is clean."]
+      : score >= 65 ? ["s-revise", "REVISE", "Several gendered terms. Work through the marks."]
+      : ["s-revise", "REVISE", "Heavily gendered wording. Accept every mark, then review."];
+    const stamp = $("stamp");
+    if (!stamp.classList.contains(cls) || (!cls && stamp.className !== "stamp")) {
+      stamp.className = "stamp " + cls; void stamp.offsetWidth; stamp.classList.add("hit");
+    }
+    $("stampT").textContent = label;
+    $("scoreN").textContent = score == null ? "– / 100" : score + " / 100";
+    $("scoreSub").textContent = s;
+  }
+
+  // spine: proportional ticks showing where marks fall; click to jump
+  function renderSpine(text) {
+    const sp = $("spine"); sp.textContent = "";
+    for (const m of matches) {
+      const i = document.createElement("i");
+      i.style.top = `calc(${(m.start / Math.max(1, text.length)) * 100}% - 1px)`;
+      i.title = `“${m.text}” → ${LEXICON[m.term][0]}`;
+      i.onclick = () => jumpTo(m.term, m);
+      sp.append(i);
+    }
+  }
+
+  function renderSummary(summary) {
+    const ul = $("summary"); ul.textContent = "";
+    const empty = $("summaryEmpty");
+    empty.innerHTML = editor.value.trim()
+      ? 'No marks. The page is clean.<small>Nothing left to correct</small>'
+      : 'The desk is empty.<small>Open a file, paste text, or pick a sample</small>';
+    [...summary].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).forEach(([term, n], i) => {
+      const li = document.createElement("li"); li.className = "find"; li.style.animationDelay = i * 35 + "ms";
+      const top = document.createElement("div"); top.className = "find-top";
+      const tEl = document.createElement("button"); tEl.className = "term"; tEl.textContent = term; tEl.title = "Jump to first occurrence";
+      tEl.onclick = () => jumpTo(term);
+      const c = document.createElement("span"); c.className = "count"; c.textContent = "×" + n;
+      top.append(tEl, c);
+      const alts = document.createElement("div"); alts.className = "alts";
+      alts.innerHTML = '<span class="alts-l">Write</span>';
+      for (const a of LEXICON[term]) {
+        const b = document.createElement("button"); b.className = "chip"; b.textContent = a; b.title = "Replace every occurrence";
+        b.onclick = () => { const k = applyReplacements(matches.filter((m) => m.term === term).map((m) => ({ m, alt: a }))); toast(`Replaced ${k} × ${term}`); };
+        alts.append(b);
+      }
+      li.append(top, alts); ul.append(li);
+    });
+  }
+
+  // live highlight layer behind the textarea
+  function renderBackdrop(text) {
+    backdropIn.textContent = "";
+    let pos = 0;
+    matches.forEach((m, i) => {
+      backdropIn.append(text.slice(pos, m.start));
+      const mk = document.createElement("mark"); mk.textContent = m.text; mk.dataset.i = i;
+      mk.dataset.fix = matchCase(m.text, LEXICON[m.term][0]);
+      backdropIn.append(mk); pos = m.end;
+    });
+    backdropIn.append(text.slice(pos) + "​\n");
+    syncScroll();
+  }
+  function syncScroll() {
+    backdropIn.style.transform = `translateY(${-editor.scrollTop}px)`;
+    $("editorWrap").style.setProperty("--sy", editor.scrollTop + "px");
+  }
+  editor.addEventListener("scroll", () => { syncScroll(); hidePop(); });
+
+  function jumpTo(term, hit) {
+    const m = hit || matches.find((x) => x.term === term); if (!m) return;
+    editor.focus(); editor.setSelectionRange(m.start, m.end);
+    const ratio = m.start / Math.max(1, editor.value.length);
+    editor.scrollTop = Math.max(0, ratio * editor.scrollHeight - editor.clientHeight / 2);
+    syncScroll();
+    const mk = backdropIn.querySelector(`mark[data-i="${matches.indexOf(m)}"]`);
+    mk?.classList.add("sel"); setTimeout(() => mk?.classList.remove("sel"), 900);
+  }
+
+  // ---------- report ----------
+  function lineCol(text, pos) {
+    const before = text.slice(0, pos);
+    return [before.split("\n").length, pos - (before.lastIndexOf("\n") + 1) + 1];
+  }
+  function buildReport(text, summary) {
+    if (!text.trim() || !matches.length) return text.trim() ? NEUTRAL : "";
+    const L = ["GENDER-NEUTRAL LANGUAGE REPORT", "Source: " + source, "=".repeat(60),
+      `Gender-specific terms found: ${matches.length} (${summary.size} distinct)`, "",
+      "Term".padEnd(22) + "Count".padStart(6) + "  Suggested alternative(s)", "-".repeat(60)];
+    [...summary].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .forEach(([t, n]) => L.push(t.padEnd(22) + String(n).padStart(6) + "  " + LEXICON[t].join(", ")));
+    L.push("", "Occurrences", "-".repeat(60));
+    for (const m of matches) {
+      const [ln, col] = lineCol(text, m.start);
+      const ctx = text.slice(Math.max(0, m.start - 25), m.end + 25).replace(/\n/g, " ");
+      L.push(`Line ${ln}, col ${col}: "${m.text}" -> ${LEXICON[m.term].join(" / ")}`, `    ...${ctx}...`);
+    }
+    return L.join("\n");
+  }
+  $("dlBtn").onclick = () => {
+    const txt = $("report").textContent; if (!txt) return toast("Nothing to download yet");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([txt], { type: "text/plain" }));
+    a.download = "gender-neutral-report.txt"; a.click(); URL.revokeObjectURL(a.href);
+  };
+  $("copyBtn").onclick = () => {
+    const txt = $("report").textContent; if (!txt) return toast("Nothing to copy yet");
+    navigator.clipboard?.writeText(txt).then(() => toast("Report copied"), () => toast("Copy failed"));
+  };
+
+  // ---------- click a highlight -> popover ----------
+  function matchAt(pos) { return matches.findIndex((m) => pos >= m.start && pos <= m.end); }
+  editor.addEventListener("click", () => {
+    if (editor.selectionStart !== editor.selectionEnd) return hidePop();
+    const i = matchAt(editor.selectionStart);
+    if (i < 0) return hidePop();
+    const m = matches[i];
+    const mk = backdropIn.querySelector(`mark[data-i="${i}"]`); if (!mk) return;
+    pop.textContent = "";
+    const t = document.createElement("div"); t.className = "pop-title"; t.textContent = `Strike “${m.text}” — write`; pop.append(t);
+    for (const alt of LEXICON[m.term]) {
+      const b = document.createElement("button"); b.textContent = matchCase(m.text, alt);
+      b.onclick = () => { hidePop(); applyReplacements([{ m, alt }]); };
+      pop.append(b);
+    }
+    const r = mk.getBoundingClientRect();
+    pop.hidden = false;
+    pop.style.left = Math.max(8, Math.min(r.left + scrollX, innerWidth - 210)) + "px";
+    pop.style.top = r.bottom + scrollY + 8 + "px";
+  });
+  function hidePop() { pop.hidden = true; }
+  document.addEventListener("mousedown", (e) => { if (!pop.contains(e.target) && e.target !== editor) hidePop(); });
+
+  // ---------- editor events ----------
+  editor.addEventListener("input", () => {
+    clearTimeout(timer);
+    renderBackdrop(editor.value);
+    timer = setTimeout(() => { analyze(); pushHistory(); }, 180);
+    source = "(pasted text)"; $("fileChip").hidden = true;
+  });
+  $("fixAllBtn").onclick = () => {
+    const k = applyReplacements(matches.map((m) => ({ m, alt: LEXICON[m.term][0] })));
+    toast(`${k} mark${k > 1 ? "s" : ""} accepted · Undo to revert`);
+  };
+  $("undoBtn").onclick = undo;
+  function undo() {
+    if (history.length < 2) return;
+    history.pop(); editor.value = history[history.length - 1];
+    $("undoBtn").disabled = history.length < 2; analyze();
+  }
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") { hidePop(); $("sampleMenu").hidden = true; }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "o") { e.preventDefault(); $("file").click(); }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && document.activeElement !== editor) { e.preventDefault(); undo(); }
+  });
+  $("clearBtn").onclick = () => {
+    if (editor.value) { pushHistory(); }
+    editor.value = ""; $("fileChip").hidden = true; source = "(pasted text)"; pushHistory(); analyze(); editor.focus();
+  };
+
+  // samples menu
+  $("sampleBtn").onclick = (e) => { e.stopPropagation(); $("sampleMenu").hidden = !$("sampleMenu").hidden; };
+  document.addEventListener("click", () => ($("sampleMenu").hidden = true));
+  $("sampleMenu").querySelectorAll("button").forEach((b) => (b.onclick = () => {
+    editor.value = SAMPLES[b.dataset.s]; source = "(sample: " + b.dataset.s + ")"; $("fileChip").hidden = true;
+    pushHistory(); analyze();
+  }));
+
+  // ---------- tabs with sliding ink ----------
+  const tabs = [...document.querySelectorAll(".tab")];
+  tabs.forEach((t) => t.addEventListener("click", () => {
+    tabs.forEach((x) => x.classList.toggle("active", x === t));
+    document.querySelectorAll(".pane").forEach((p) => (p.hidden = p.id !== t.dataset.pane));
+  }));
+  $("openTop").onclick = () => $("file").click();
+
+  // ---------- file reading ----------
+  async function readFile(file) {
+    const ext = file.name.split(".").pop().toLowerCase();
+    if (ext === "txt") return file.text();
+    if (ext === "docx") {
+      if (!window.mammoth) throw new Error("DOCX reader failed to load (check your internet connection).");
+      return (await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() })).value;
+    }
+    if (ext === "pdf") {
+      if (!window.pdfjsLib) throw new Error("PDF reader failed to load (check your internet connection).");
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+      const pages = [];
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const c = await (await pdf.getPage(i)).getTextContent();
+        let line = "", out = "";
+        for (const it of c.items) { line += it.str; if (it.hasEOL) { out += line + "\n"; line = ""; } else if (it.str && !/\s$/.test(it.str)) line += " "; }
+        pages.push(out + line);
+      }
+      return pages.join("\n\n");
+    }
+    if (ext === "doc") throw new Error("Legacy .doc isn't supported. Save it as .docx in Word and try again.");
+    throw new Error(`Unsupported file type ".${ext}". Use .txt, .docx or .pdf.`);
+  }
+  async function loadFile(file) {
+    if (!file) return;
+    try {
+      setBanner("info", "Reading " + file.name + "…");
+      const text = await readFile(file);
+      editor.value = text; source = file.name;
+      const chip = $("fileChip"); chip.textContent = file.name; chip.hidden = false;
+      pushHistory(); analyze();
+      if (!text.trim()) setBanner("err", "No text could be extracted (scanned PDF?).");
+    } catch (err) { setBanner("err", err.message); }
+  }
+  $("file").addEventListener("change", (e) => { loadFile(e.target.files[0]); e.target.value = ""; });
+  $("uploadLbl").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("file").click(); } });
+  const card = $("docCard"), wrap = $("editorWrap");
+  let depth = 0;
+  card.addEventListener("dragenter", (e) => { e.preventDefault(); depth++; wrap.classList.add("over"); });
+  card.addEventListener("dragover", (e) => e.preventDefault());
+  card.addEventListener("dragleave", () => { if (--depth <= 0) { depth = 0; wrap.classList.remove("over"); } });
+  card.addEventListener("drop", (e) => { e.preventDefault(); depth = 0; wrap.classList.remove("over"); loadFile(e.dataTransfer.files[0]); });
+
+  // ---------- automaton inspector (animated) ----------
+  function inspect(animate) {
+    clearTimeout(playTimer);
+    const word = $("fsaInput").value, box = $("fsaTrace"), v = $("fsaVerdict");
+    box.textContent = ""; v.textContent = "";
+    const steps = fsa.trace(word);
+    // tape: one cell per character, the state reached sits beneath it
+    const draw = (i) => {
+      const s = steps[i];
+      const cell = document.createElement("div");
+      cell.className = "cell" + (i === 0 ? " start" : "") + (s.accept && s.accept.length ? " acc" : "");
+      const b = document.createElement("b"); b.textContent = i === 0 ? "⊢" : s.ch === " " ? "␣" : s.ch;
+      const q = document.createElement("i"); q.textContent = "q" + s.state;
+      cell.append(b, q); box.append(cell);
+    };
+    const finish = () => {
+      const last = steps[steps.length - 1];
+      if (last.accept && last.accept.length) {
+        const t = last.accept[0];
+        v.textContent = `Accepted — “${t}”, write ${LEXICON[t].join(" or ")}.`; v.style.color = "var(--pencil)";
+      } else {
+        v.textContent = word.trim() ? "Rejected. Not a term on the list." : ""; v.style.color = "var(--mute)";
+      }
+    };
+    if (!animate) { steps.forEach((_, i) => draw(i)); return finish(); }
+    let i = 0;
+    (function tick() { draw(i++); if (i < steps.length) playTimer = setTimeout(tick, 280); else finish(); })();
+  }
+  $("fsaInput").addEventListener("input", () => inspect(false));
+  $("playBtn").onclick = () => inspect(true);
+
+  // ---------- theme ----------
+  $("themeBtn").onclick = () => {
+    const cur = document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    const next = cur === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next; themeLabel();
+    try { localStorage.setItem("neutral-theme", next); } catch (e) {}
+  };
+  function themeLabel() {
+    const dark = (document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")) === "dark";
+    $("themeLbl").textContent = dark ? "Paper" : "Night";
+  }
+
+  history.push(""); themeLabel(); inspect(false); analyze();
+})();
+
+</script>
+</body>
+</html>
