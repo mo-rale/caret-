@@ -1,6 +1,6 @@
 # Caret
 
-*A proof desk for inclusive language.* — by Ahron Badili
+*A proof desk for inclusive language.* — by Morale
 
 Caret is a web application that uses a **finite state automaton (FSA)** to recognize gender-specific
 terms in text documents and to suggest gender-neutral alternatives. Flagged words are marked up the
